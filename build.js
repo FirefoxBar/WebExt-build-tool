@@ -19,12 +19,14 @@ if (!buildExt || typeof(config[buildExt]) === 'undefined') {
 }
 
 const extConfig = config[buildExt];
+const extIgnores = extConfig.basic.ignores;
 const extDir = extConfig.basic.dir;
 const outputDir = extConfig.basic.output.replace('{EXT_DIR}', extDir) + '/';
 const BaseOutput = tempDir + buildExt + '.zip';
 const FirefoxOutput = outputDir + 'firefox/';
 const ChromeOutput = outputDir + 'chrome/';
-const ChromeManifest = typeof(extConfig.ext.crx.manifest) === 'undefined' ? {} : require(extDir + extConfig.ext.crx.manifest)
+const FirefoxManifest = typeof(extConfig.ext.gecko.manifest) === 'undefined' ? {} : require(extConfig.ext.gecko.manifest.replace('{EXT_DIR}', extDir));
+const ChromeManifest = typeof(extConfig.ext.crx.manifest) === 'undefined' ? {} : require(extConfig.ext.crx.manifest.replace('{EXT_DIR}', extDir));
 
 // Check dirs
 if (extConfig.basic.version.firefox || extConfig.basic.version.amo) {
@@ -52,13 +54,13 @@ function readDir(dir) {
 				return;
 			}
 			files.forEach((filename) => {
-				if (ignores.includes(filename)) {
+				if (extIgnores.includes(filename)) {
 					return;
 				}
 				if (fs.statSync(dir + '/' + filename).isFile()) {
 					fileList.push({
 						"name": filename,
-						"path": dir.substr(rootDir.length) + '/' + filename,
+						"path": dir.substr(extDir.length) + '/' + filename,
 						"fullpath": dir + '/' + filename
 					});
 				} else {
@@ -115,7 +117,7 @@ function createZip(output, fileList) {
 	});
 }
 
-readDir(rootDir).then((fileList) => {
+readDir(extDir).then((fileList) => {
 	console.log('Scanned all files');
 	createZip(BaseOutput, fileList).then(() => {
 		console.log('Created base zip file');
@@ -138,12 +140,13 @@ readDir(rootDir).then((fileList) => {
 		}
 		// Build chrome webstore format
 		if (extConfig.basic.version.webstore) {
+			let zip_out = ChromeOutput + extConfig.ext.filename.replace(/\{VERSION\}/g, extConfig.ext.version) + '-webstore.zip';
 			let zip = new AdmZip(BaseOutput);
 			let manifest = deepCopy(ChromeManifest);
 			manifest.version = extConfig.ext.version;
 			manifest.update_url = extConfig.ext.crx.update;
 			zip.addFile('manifest.json', new Buffer(JSON.stringify(manifest)));
-			zip.writeZip(outputDir + 'chrome.zip');
+			zip.writeZip(zip_out);
 			console.log('Build chrome webstore version finished');
 		}
 		// Build default firefox extension
