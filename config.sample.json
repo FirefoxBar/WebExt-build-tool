@@ -1,26 +1,44 @@
 {
-	"ext": {
-		"version": "3.0.0",
-		"filename": "xstyle-{VERSION}",
-		"gecko": {
-			"default": "xstyle@addon.firefoxcn.net",
-			"amo": "xstyle-amo@addon.firefoxcn.net",
-			"update": "https://ext.firefoxcn.net/xstyle/install/update.json",
-			"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}-signed.xpi"
+	"ext_name": {
+		"basic": {
+			"dir": "F:/Code/xStyle",
+			"output": "{EXT_DIR}/build",
+			"locales": "{EXT_DIR}/_locales",
+			"locales_type": "transifex",
+			"locales_placeholder": "{EXT_DIR}/build/locales_placeholder.json",
+			"ignores": [".git", ".vscode", "build", "manifest", ".gitignore", "README.md", "LICENSE", "manifest.json"],
+			"version": {
+				"firefox": 1,
+				"amo": 1,
+				"chrome": 1,
+				"webstore": 1
+			}
 		},
-		"crx": {
-			"id": "dbbjndgnfkbjmciadekfomemdiledmam",
-			"update": "https://ext.firefoxcn.net/xstyle/install/update.xml",
-			"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}.crx",
-			"key": "../xstyle.pem"
+		"ext": {
+			"version": "3.0.0",
+			"filename": "xstyle-{VERSION}",
+			"gecko": {
+				"manifest": "manifest/firefox.json",
+				"default": "xstyle@addon.firefoxcn.net",
+				"amo": "xstyle-amo@addon.firefoxcn.net",
+				"update": "https://ext.firefoxcn.net/xstyle/install/update.json",
+				"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}-signed.xpi"
+			},
+			"crx": {
+				"manifest": "manifest/chrome.json",
+				"id": "dbbjndgnfkbjmciadekfomemdiledmam",
+				"update": "https://ext.firefoxcn.net/xstyle/install/update.xml",
+				"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}.crx",
+				"key": "F:/Code/xstyle.pem"
+			}
+		},
+		"amo": {
+			"user": "YOUR_AMO_USER",
+			"secret": "YOUR_AMO_SECRET"
+		},
+		"transifex": {
+			"user": "YOUR_TRANSIFEX_USER",
+			"token": "YOUR_TRANSIFEX_TOKEN"
 		}
-	},
-	"amo": {
-		"user": "YOUR_AMO_USER",
-		"secret": "YOUR_AMO_SECRET"
-	},
-	"transifex": {
-		"user": "YOUR_TRANSIFEX_USER",
-		"token": "YOUR_TRANSIFEX_TOKEN"
 	}
 }

@@ -3,61 +3,45 @@ const AdmZip = require('adm-zip');
 const uglify = require('uglify-es');
 const cleancss = require('clean-css');
 const FirefoxExt = require('sign-addon').default;
-const crypto = require('crypto');
 const deepCopy = require('./deepCopy.js');
+const createCrx = require('./createCrx.js');
 
 const config = require('./config.json');
 const CleanCSSOptions = require('./clean_css_config.json');
 
-const buildDir = __dirname.replace(/\\/g, '/');
-const rootDir = buildDir.substr(0, buildDir.lastIndexOf('/'));
+const rootDir = __dirname.replace(/\\/g, '/') + '/';
+const tempDir = rootDir + 'temp/';
 
-// const outputDir = buildDir + '/output/';
-const outputDir = 'Z:/';
-const BaseOutput = outputDir + 'base.zip';
-const FirefoxOutput = outputDir + 'Firefox/';
-const ChromeOutput = outputDir + 'Chrome/';
+const buildExt = process.argv[2];
+if (!buildExt || typeof(config[buildExt]) === 'undefined') {
+	console.log('Error: ' + buildExt + ' not found!');
+	process.exit(0);
+}
+
+const extConfig = config[buildExt];
+const extDir = extConfig.basic.dir;
+const outputDir = extConfig.basic.output.replace('{EXT_DIR}', extDir) + '/';
+const BaseOutput = tempDir + buildExt + '.zip';
+const FirefoxOutput = outputDir + 'firefox/';
+const ChromeOutput = outputDir + 'chrome/';
+const ChromeManifest = typeof(extConfig.ext.crx.manifest) === 'undefined' ? {} : require(extDir + extConfig.ext.crx.manifest)
 
 // Check dirs
-if (!fs.existsSync(FirefoxOutput)) {
-	fs.mkdirSync(FirefoxOutput);
+if (extConfig.basic.version.firefox || extConfig.basic.version.amo) {
+	if (!fs.existsSync(FirefoxOutput)) {
+		fs.mkdirSync(FirefoxOutput);
+	}
 }
-if (!fs.existsSync(ChromeOutput)) {
-	fs.mkdirSync(ChromeOutput);
+if (extConfig.basic.version.chrome || extConfig.basic.version.webstore) {
+	if (!fs.existsSync(ChromeOutput)) {
+		fs.mkdirSync(ChromeOutput);
+	}
 }
-
-const ChromeManifest = require(rootDir + '/manifest/chrome.json');
-const FirefoxManifest = require(rootDir + '/manifest/firefox.json');
-
-const ignores = ['.git', '.vscode', 'build', 'manifest', '.gitignore', 'README.md', 'LICENSE', 'manifest.json', 'manifest_t.json'];
 
 function getFileExt(name) {
 	return name.includes('.') ? name.substr(name.lastIndexOf('.') + 1) : '';
 }
-function createCrx(fileContent, publicKey) {
-	return new Promise((resolve) => {
-		var keyLength = publicKey.length;
-		var signature = new Buffer(
-			crypto
-			.createSign("sha1")
-			.update(fileContent)
-			.sign(publicKey),
-			"binary"
-		);
-		var sigLength = signature.length;
-		var zipLength = fileContent.length;
-		var length = 16 + keyLength + sigLength + zipLength;
-		var crx = new Buffer(length);
-		crx.write("Cr24" + new Array(13).join("\x00"), "binary");
-		crx[4] = 2;
-		crx.writeUInt32LE(keyLength, 8);
-		crx.writeUInt32LE(sigLength, 12);
-		publicKey.copy(crx, 16);
-		signature.copy(crx, 16 + keyLength);
-		fileContent.copy(crx, 16 + keyLength + sigLength);
-		resolve(crx);
-	});
-}
+
 function readDir(dir) {
 	return new Promise((resolve) => {
 		let readCount = 0;
@@ -130,75 +114,81 @@ function createZip(output, fileList) {
 		resolve();
 	});
 }
-(() => {
-return;
+
 readDir(rootDir).then((fileList) => {
 	console.log('Scanned all files');
 	createZip(BaseOutput, fileList).then(() => {
 		console.log('Created base zip file');
 		// Build chrome extension
-		const crx_default_zip_out = ChromeOutput + config.ext.filename.replace(/\{VERSION\}/g, config.ext.version) + '.zip';
-		const crx_default_crx_out = ChromeOutput + config.ext.filename.replace(/\{VERSION\}/g, config.ext.version) + '.crx';
-		let crx_default_zip = new AdmZip(BaseOutput);
-		let crx_default_manifest = deepCopy(ChromeManifest);
-		crx_default_manifest.version = config.ext.version;
-		crx_default_manifest.update_url = config.ext.crx.update;
-		crx_default_zip.addFile('manifest.json', new Buffer(JSON.stringify(crx_default_manifest)));
-		crx_default_zip.writeZip(crx_default_zip_out);
-		createCrx(fs.readFileSync(crx_default_zip_out), fs.readFileSync(rootDir + '/' + config.ext.crx.key))
-		.then((crxBuffer) => {
-			fs.writeFile(crx_default_crx_out, crxBuffer);
-			console.log('Build chrome crx version finished');
-		});
-		console.log('Build chrome version finished');
+		if (extConfig.basic.version.chrome) {
+			let zip_out = ChromeOutput + extConfig.ext.filename.replace(/\{VERSION\}/g, extConfig.ext.version) + '.zip';
+			let crx_out = ChromeOutput + extConfig.ext.filename.replace(/\{VERSION\}/g, extConfig.ext.version) + '.crx';
+			let zip = new AdmZip(BaseOutput);
+			let manifest = deepCopy(ChromeManifest);
+			manifest.version = extConfig.ext.version;
+			manifest.update_url = extConfig.ext.crx.update;
+			zip.addFile('manifest.json', new Buffer(JSON.stringify(manifest)));
+			zip.writeZip(zip_out);
+			createCrx(fs.readFileSync(zip_out), fs.readFileSync(extConfig.ext.crx.key))
+			.then((crxBuffer) => {
+				fs.writeFile(crx_out, crxBuffer);
+				console.log('Build chrome crx version finished');
+			});
+			console.log('Build chrome version finished');
+		}
 		// Build chrome webstore format
-		let crx_store_zip = new AdmZip(BaseOutput);
-		let crx_store_manifest = deepCopy(ChromeManifest);
-		crx_store_manifest.version = config.ext.version;
-		crx_store_manifest.update_url = config.ext.crx.update;
-		crx_store_zip.addFile('manifest.json', new Buffer(JSON.stringify(crx_store_manifest)));
-		crx_store_zip.writeZip(outputDir + 'chrome.zip');
-		console.log('Build chrome webstore version finished');
+		if (extConfig.basic.version.webstore) {
+			let zip = new AdmZip(BaseOutput);
+			let manifest = deepCopy(ChromeManifest);
+			manifest.version = extConfig.ext.version;
+			manifest.update_url = extConfig.ext.crx.update;
+			zip.addFile('manifest.json', new Buffer(JSON.stringify(manifest)));
+			zip.writeZip(outputDir + 'chrome.zip');
+			console.log('Build chrome webstore version finished');
+		}
 		// Build default firefox extension
-		const xpi_default_path = FirefoxOutput + config.ext.filename.replace(/\{VERSION\}/g, config.ext.version) + '.xpi';
-		let xpi_default = new AdmZip(BaseOutput);
-		let xpi_default_manifest = deepCopy(FirefoxManifest);
-		xpi_default_manifest.version = config.ext.version;
-		xpi_default_manifest.applications.gecko.id = config.ext.gecko.default;
-		xpi_default_manifest.applications.gecko.update_url = config.ext.gecko.update;
-		xpi_default.addFile('manifest.json', new Buffer(JSON.stringify(xpi_default_manifest)));
-		xpi_default.writeZip(xpi_default_path);
-		console.log('Build firefox version finished');
-		// Sign
-		// FirefoxExt({
-		// 	xpiPath: xpi_default_path,
-		// 	version: config.ext.version,
-		// 	apiKey: config.amo.user,
-		// 	apiSecret: config.amo.secret,
-		// 	downloadDir: FirefoxOutput
-		// }).then(function(result) {
-		// 	if (result.success) {
-		// 		console.log("The following signed files were downloaded:");
-		// 		console.log(result.downloadedFiles);
-		// 		console.log("Your extension ID is:");
-		// 		console.log(result.id);
-		// 	} else {
-		// 		console.error("Your add-on could not be signed!");
-		// 		console.error("Check the console for details.");
-		// 	}
-		// 	console.log(result.success ? "SUCCESS" : "FAIL");
-		// })
-		// .catch(function(error) {
-		// 	console.error("Signing error:", error);
-		// });
+		if (extConfig.basic.version.firefox) {
+			let xpi_out = FirefoxOutput + extConfig.ext.filename.replace(/\{VERSION\}/g, extConfig.ext.version) + '.xpi';
+			let xpi = new AdmZip(BaseOutput);
+			let manifest = deepCopy(FirefoxManifest);
+			manifest.version = extConfig.ext.version;
+			manifest.applications.gecko.id = extConfig.ext.gecko.default;
+			manifest.applications.gecko.update_url = extConfig.ext.gecko.update;
+			xpi.addFile('manifest.json', new Buffer(JSON.stringify(manifest)));
+			xpi.writeZip(xpi_out);
+			console.log('Build firefox version finished');
+			// Sign
+			// FirefoxExt({
+			// 	xpiPath: xpi_out,
+			// 	version: extConfig.ext.version,
+			// 	apiKey: extConfig.amo.user,
+			// 	apiSecret: extConfig.amo.secret,
+			// 	downloadDir: FirefoxOutput
+			// }).then(function(result) {
+			// 	if (result.success) {
+			// 		console.log("The following signed files were downloaded:");
+			// 		console.log(result.downloadedFiles);
+			// 		console.log("Your extension ID is:");
+			// 		console.log(result.id);
+			// 	} else {
+			// 		console.error("Your add-on could not be signed!");
+			// 		console.error("Check the console for details.");
+			// 	}
+			// 	console.log(result.success ? "SUCCESS" : "FAIL");
+			// })
+			// .catch(function(error) {
+			// 	console.error("Signing error:", error);
+			// });
+		}
 		// Build amo firefox extension
-		let xpi_amo = new AdmZip(BaseOutput);
-		let xpi_amo_manifest = deepCopy(FirefoxManifest);
-		xpi_amo_manifest.version = config.ext.version;
-		xpi_amo_manifest.applications.gecko.id = config.ext.gecko.default;
-		xpi_amo.addFile('manifest.json', new Buffer(JSON.stringify(xpi_amo_manifest)));
-		xpi_amo.writeZip(FirefoxOutput + config.ext.filename.replace(/\{VERSION\}/g, config.ext.version) + '-amo.xpi');
-		console.log('Build firefox version finished');
+		if (extConfig.basic.version.amo) {
+			let xpi = new AdmZip(BaseOutput);
+			let manifest = deepCopy(FirefoxManifest);
+			manifest.version = extConfig.ext.version;
+			manifest.applications.gecko.id = extConfig.ext.gecko.default;
+			xpi.addFile('manifest.json', new Buffer(JSON.stringify(manifest)));
+			xpi.writeZip(FirefoxOutput + extConfig.ext.filename.replace(/\{VERSION\}/g, extConfig.ext.version) + '-amo.xpi');
+			console.log('Build firefox version finished');
+		}
 	});
 });
-})();
