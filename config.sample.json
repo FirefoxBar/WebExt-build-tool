@@ -22,6 +22,7 @@
 				"default": "xstyle@addon.firefoxcn.net",
 				"amo": "xstyle-amo@addon.firefoxcn.net",
 				"update": "https://ext.firefoxcn.net/xstyle/install/update.json",
+				"update_local": "{EXT_DIR}/build/update.json",
 				"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}-signed.xpi"
 			},
 			"crx": {
