@@ -231,9 +231,6 @@ readDir(extDir).then((fileList) => {
 						if (extConfig.ext.gecko.update_local) {
 							const update_file_path = extConfig.ext.gecko.update_local.replace('{EXT_DIR}', extDir);
 							let update_file_json = require(update_file_path);
-							console.log(update_file_json.addons);
-							console.log(app_id);
-							console.log(update_file_json.addons[app_id]);
 							if (update_file_json.addons[app_id].updates.length > 2) {
 								update_file_json.addons[app_id].updates.splice(2, update_file_json.addons[app_id].updates.length - 2);
 							}
