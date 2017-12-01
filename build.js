@@ -13,6 +13,13 @@ const CleanCSSOptions = require('./clean_css_config.json');
 const rootDir = __dirname.replace(/\\/g, '/') + '/';
 const tempDir = rootDir + 'temp/';
 
+const updateXml = "<?xml version='1.0' encoding='UTF-8'?>\
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\
+  <app appid='{EXT_ID}'>\
+    <updatecheck codebase='{EXT_URL}' version='{EXT_VERSION}' />\
+  </app>\
+</gupdate>";
+
 const buildExt = process.argv[2];
 if (!buildExt || typeof(config[buildExt]) === 'undefined') {
 	console.log('Error: ' + buildExt + ' not found!');
@@ -160,6 +167,16 @@ readDir(extDir).then((fileList) => {
 			})
 			.then((crxBuffer) => {
 				fs.writeFileSync(crx_out, crxBuffer);
+				// If require update.json, generate it
+				if (extConfig.ext.crx.update_local) {
+					const update_file_path = extConfig.ext.crx.update_local.replace('{EXT_DIR}', extDir);
+					let update_file_xml = updateXml;
+					update_file_xml = update_file_xml.replace(/\{EXT_ID\}/g, extConfig.ext.crx.id);
+					update_file_xml = update_file_xml.replace(/\{EXT_VERSION\}/g, extConfig.ext.version);
+					update_file_xml = update_file_xml.replace(/\{EXT_URL\}/g, extConfig.ext.crx.download_url.replace(/\{VERSION\}/g, extConfig.ext.version));
+					fs.writeFileSync(update_file_path, new Buffer(update_file_xml));
+					console.log('Updated update.xml');
+				}
 				console.log('Build chrome crx version finished');
 			});
 		}
