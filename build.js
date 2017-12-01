@@ -7,6 +7,7 @@ const deepCopy = require('./deepCopy.js');
 const createCrx = require('./createCrx.js');
 
 const config = require('./config.json');
+const uglifyOptions = require('./uglify-config.json');
 const CleanCSSOptions = require('./clean_css_config.json');
 
 const rootDir = __dirname.replace(/\\/g, '/') + '/';
@@ -96,7 +97,7 @@ function createZip(output, fileList) {
 					new Buffer(
 						uglify.minify(
 							fs.readFileSync(f.fullpath, 'utf-8'),
-							{ compress: true, mangle: true}
+							uglifyOptions
 						).code
 					)
 				);

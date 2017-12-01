@@ -29,6 +29,7 @@
 				"manifest": "{EXT_DIR}/manifest/chrome.json",
 				"id": "dbbjndgnfkbjmciadekfomemdiledmam",
 				"update": "https://ext.firefoxcn.net/xstyle/install/update.xml",
+				"update_local": "{EXT_DIR}/build/update.json",
 				"download_url": "https://github.com/FirefoxBar/xStyle/releases/download/{VERSION}/xstyle-{VERSION}.crx",
 				"key": "F:/Code/xstyle.pem"
 			}
