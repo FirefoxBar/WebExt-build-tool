@@ -1,25 +1,34 @@
 const fs = require('fs');
 const request = require('request');
 const deepCopy = require('./deepCopy.js');
-
 const config = require('./config.json');
-const placeholder = require('./locales_placeholder.json');
 
-const default_language_name = 'en';
-const languages = ['zh_CN', 'zh_TW', 'sv_SE', 'ru'];
+const buildExt = process.argv[2];
+if (!buildExt || typeof(config[buildExt]) === 'undefined') {
+	console.log('Error: ' + buildExt + ' not found!');
+	process.exit(0);
+}
+
+const extConfig = config[buildExt];
+const extIgnores = extConfig.basic.ignores;
+const extDir = extConfig.basic.dir;
 
 const buildDir = __dirname.replace(/\\/g, '/');
 const rootDir = buildDir.substr(0, buildDir.lastIndexOf('/'));
-const outputDir = rootDir + '/_locales/';
-// const outputDir = 'Z:/';
+const outputDir = extConfig.locales.dir.replace('{EXT_DIR}', extDir);
+
+const placeholder = require(extConfig.locales.placeholder.replace('{EXT_DIR}', extDir));
+
+const default_language_name = extConfig.locales.default;
+const languages = extConfig.locales.languages;
 
 function requestTransifex(api) {
 	return new Promise((resolve) => {
 		request.get({
 			"url": "https://www.transifex.com/api/2/" + api,
 			"auth": {
-				"user": config.transifex.user,
-				"pass": config.transifex.token
+				"user": extConfig.transifex.user,
+				"pass": extConfig.transifex.token
 			}
 		}, (err, data, body) => {
 			resolve(JSON.parse(body));
@@ -78,7 +87,10 @@ function writeOneLanguage(obj, lang, default_language) {
 requestTransifex('project/' + config.transifex.project + '/resource/messages/translation/' + default_language_name + '/')
 .then(r => {
 	let default_language = ksort(JSON.parse(r.content));
-	fs.writeFile(buildDir + "/output/messages.json", new Buffer(JSON.stringify(default_language, null, "\t")));
+	if (extConfig.locales.editable) {
+		// Write editable locale file
+		fs.writeFile(extConfig.locales.editable.replace('{EXT_DIR}', extDir), new Buffer(JSON.stringify(default_language, null, "\t")));
+	}
 	writeOneLanguage(default_language, default_language_name).then(() => {
 		console.log("Write default language ok");
 	});

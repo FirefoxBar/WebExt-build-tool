@@ -3,9 +3,6 @@
 		"basic": {
 			"dir": "F:/Code/xStyle",
 			"output": "{EXT_DIR}/build",
-			"locales": "{EXT_DIR}/_locales",
-			"locales_type": "transifex",
-			"locales_placeholder": "{EXT_DIR}/build/locales_placeholder.json",
 			"ignores": [".git", ".vscode", "build", "manifest", ".gitignore", "README.md", "LICENSE", "manifest.json"],
 			"version": {
 				"firefox": 1,
@@ -13,6 +10,14 @@
 				"chrome": 1,
 				"webstore": 1
 			}
+		},
+		"locales": {
+			"dir": "{EXT_DIR}/_locales",
+			"type": "transifex",
+			"placeholder": "{EXT_DIR}/build/locales_placeholder.json",
+			"default": "en",
+			"languages": ["zh_CN", "zh_TW", "sv_SE", "ru"],
+			"editable": "{EXT_DIR}/build/editable.json"
 		},
 		"ext": {
 			"version": "3.0.0",
