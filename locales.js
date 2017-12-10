@@ -79,12 +79,15 @@ function writeOneLanguage(obj, lang, default_language) {
 			}
 		}
 		addPlaceholders(newObj);
+		if (!fs.existsSync(outputDir + "/" + lang)) {
+			fs.mkdirSync(outputDir + "/" + lang);
+		}
 		fs.writeFile(outputDir + "/" + lang + "/messages.json", new Buffer(JSON.stringify(newObj)), resolve);
 	});
 }
 
 // Get default language
-requestTransifex('project/' + config.transifex.project + '/resource/messages/translation/' + default_language_name + '/')
+requestTransifex('project/' + extConfig.transifex.project + '/resource/messages/translation/' + default_language_name + '/')
 .then(r => {
 	let default_language = ksort(JSON.parse(r.content));
 	if (extConfig.locales.editable) {
@@ -95,12 +98,9 @@ requestTransifex('project/' + config.transifex.project + '/resource/messages/tra
 		console.log("Write default language ok");
 	});
 	languages.forEach((lang) => {
-		requestTransifex('project/' + config.transifex.project + '/resource/messages/translation/' + lang + '/')
+		requestTransifex('project/' + extConfig.transifex.project + '/resource/messages/translation/' + lang + '/')
 		.then(r => {
 			let content = ksort(JSON.parse(r.content));
-			if (!fs.existsSync(outputDir + "/" + lang)) {
-				fs.mkdirSync(outputDir + "/" + lang);
-			}
 			writeOneLanguage(content, lang, default_language).then(() => {
 				console.log("Write " + lang + " ok");
 			});
