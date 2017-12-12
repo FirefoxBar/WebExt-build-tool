@@ -7,7 +7,7 @@ const deepCopy = require('./deepCopy.js');
 const createCrx = require('./createCrx.js');
 
 const config = require('./config.json');
-const uglifyOptions = require('./uglify-config.json');
+const uglifyOptions = require('./uglify_config.json');
 const CleanCSSOptions = require('./clean_css_config.json');
 
 const rootDir = __dirname.replace(/\\/g, '/') + '/';
