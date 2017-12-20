@@ -11,6 +11,7 @@
   "dependencies": {
     "clean-css": "^4.1.9",
     "jszip": "^3.1.5",
+    "node-rsa": "^0.4.2",
     "request": "^2.83.0",
     "sign-addon": "^0.2.2",
     "uglify-es": "^3.1.9"

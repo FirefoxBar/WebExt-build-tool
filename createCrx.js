@@ -1,13 +1,19 @@
 const crypto = require('crypto');
+const RSA = require("node-rsa");
 
-function createCrx(fileContent, publicKey) {
+function generatePublicKey(privateKey) {
+	var key = new RSA(privateKey);
+	return key.exportKey('pkcs8-public-der');
+}
+function createCrx(fileContent, privateKey) {
 	return new Promise((resolve) => {
+		var publicKey = generatePublicKey(privateKey);
 		var keyLength = publicKey.length;
 		var signature = new Buffer(
 			crypto
 			.createSign("sha1")
 			.update(fileContent)
-			.sign(publicKey),
+			.sign(privateKey),
 			"binary"
 		);
 		var sigLength = signature.length;
