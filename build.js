@@ -36,6 +36,12 @@ const ChromeOutput = outputDir + 'chrome/';
 const FirefoxManifest = typeof(extConfig.ext.gecko.manifest) === 'undefined' ? {} : require(extConfig.ext.gecko.manifest.replace('{EXT_DIR}', extDir));
 const ChromeManifest = typeof(extConfig.ext.crx.manifest) === 'undefined' ? {} : require(extConfig.ext.crx.manifest.replace('{EXT_DIR}', extDir));
 
+// Custom preprocess
+let extCustom = null;
+if (extConfig.basic.custom) {
+	extCustom = require(extConfig.basic.custom.replace('{EXT_DIR}', extDir));
+}
+
 // Check dirs
 if (extConfig.basic.version.firefox || extConfig.basic.version.amo) {
 	if (!fs.existsSync(FirefoxOutput)) {
@@ -98,12 +104,16 @@ function createZip(output, fileList) {
 	return new Promise((resolve) => {
 		let archive = new JSZip();
 		fileList.forEach((f) => {
+			let contentBuffer = null;
+			if (extCustom) {
+				contentBuffer = extCustom(f);
+			}
 			if (!f.fullpath.includes('.min.js') && getFileExt(f.fullpath) === 'js') {
 				archive.file(
 					f.path,
 					new Buffer(
 						uglify.minify(
-							fs.readFileSync(f.fullpath, 'utf-8'),
+							contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath, 'utf-8'),
 							uglifyOptions
 						).code
 					)
@@ -112,11 +122,11 @@ function createZip(output, fileList) {
 				archive.file(
 					f.path,
 					new Buffer(
-						new cleancss(CleanCSSOptions).minify(fs.readFileSync(f.fullpath, 'utf-8')).styles
+						new cleancss(CleanCSSOptions).minify(contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath, 'utf-8')).styles
 					)
 				);
 			} else {
-				archive.file(f.path, fs.readFileSync(f.fullpath));
+				archive.file(f.path, contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath));
 			}
 			console.log('Added ' + f.path);
 		});
