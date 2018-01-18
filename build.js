@@ -13,12 +13,7 @@ const CleanCSSOptions = require('./clean_css_config.json');
 const rootDir = __dirname.replace(/\\/g, '/') + '/';
 const tempDir = rootDir + 'temp/';
 
-const updateXml = "<?xml version='1.0' encoding='UTF-8'?>\
-<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\
-  <app appid='{EXT_ID}'>\
-    <updatecheck codebase='{EXT_URL}' version='{EXT_VERSION}' />\
-  </app>\
-</gupdate>";
+const updateXml = "<?xml version='1.0' encoding='UTF-8'?><gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'><app appid='{EXT_ID}'><updatecheck codebase='{EXT_URL}' version='{EXT_VERSION}' /></app></gupdate>";
 
 const buildExt = process.argv[2];
 if (!buildExt || typeof(config[buildExt]) === 'undefined') {
