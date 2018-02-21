@@ -13,7 +13,7 @@ A simple tool to build a WebExt. This tool can:
 
 * Rename `config.sample.json` to `config.json`, and fill some informations in it
 
-* If you require build Firefox xpi version, you should modify `node_modules/sign-addon/dist/sign-addon.js`, about line 422:
+* If you require build Firefox xpi version, you should modify `node_modules/sign-addon/dist/sign-addon.js`, about line 432:
 
 ```js
 // Old code:
