@@ -104,14 +104,17 @@ function createZip(output, fileList) {
 				contentBuffer = extCustom(f);
 			}
 			if (!f.fullpath.includes('.min.js') && getFileExt(f.fullpath) === 'js') {
+				const rs = uglify.minify(
+					contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath, 'utf-8'),
+					uglifyOptions
+				);
+				if (rs.error) {
+					console.error(rs.error.message);
+					process.exit();
+				}
 				archive.file(
 					f.path,
-					new Buffer(
-						uglify.minify(
-							contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath, 'utf-8'),
-							uglifyOptions
-						).code
-					)
+					new Buffer(rs.code)
 				);
 			} else if (!f.fullpath.includes('.min.css') && getFileExt(f.fullpath) === 'css') {
 				archive.file(

@@ -2,7 +2,6 @@
 	"compress": {
 		"arrows": true,
 		"booleans": true,
-		"cascade": true,
 		"collapse_vars": true,
 		"comparisons": true,
 		"computed_props": false,
@@ -37,7 +36,6 @@
 		"unsafe": false,
 		"unsafe_arrows": false,
 		"unsafe_comps": false,
-		"unsafe_Func": false,
 		"unsafe_math": false,
 		"unsafe_methods": false,
 		"unsafe_proto": false,
