@@ -63,7 +63,7 @@ function addPlaceholders(obj) {
 	}
 }
 function writeOneLanguage(obj, lang, default_language) {
-	return new Promise((resolve) => {
+	return new Promise((resolve, reject) => {
 		let newObj = deepCopy(obj);
 		for (const k in newObj) {
 			// remove description
@@ -82,7 +82,13 @@ function writeOneLanguage(obj, lang, default_language) {
 		if (!fs.existsSync(outputDir + "/" + lang)) {
 			fs.mkdirSync(outputDir + "/" + lang);
 		}
-		fs.writeFile(outputDir + "/" + lang + "/messages.json", new Buffer(JSON.stringify(newObj)), resolve);
+		fs.writeFile(outputDir + "/" + lang + "/messages.json", Buffer.from(JSON.stringify(newObj)), null, function(err) {
+			if (err === null) {
+				resolve();
+			} else {
+				reject(err);
+			}
+		});
 	});
 }
 
@@ -92,18 +98,24 @@ requestTransifex('project/' + extConfig.transifex.project + '/resource/messages/
 	let default_language = ksort(JSON.parse(r.content));
 	if (extConfig.locales.editable) {
 		// Write editable locale file
-		fs.writeFile(extConfig.locales.editable.replace('{EXT_DIR}', extDir), new Buffer(JSON.stringify(default_language, null, "\t")));
+		fs.writeFile(extConfig.locales.editable.replace('{EXT_DIR}', extDir), Buffer.from(JSON.stringify(default_language, null, "\t")), null, function(err) {});
 	}
 	writeOneLanguage(default_language, default_language_name).then(() => {
 		console.log("Write default language ok");
+	})
+	.catch(e => {
+		console.log(e);
 	});
 	languages.forEach((lang) => {
 		requestTransifex('project/' + extConfig.transifex.project + '/resource/messages/translation/' + lang + '/')
-		.then(r => {
-			let content = ksort(JSON.parse(r.content));
+		.then(rs => {
+			let content = ksort(JSON.parse(rs.content));
 			writeOneLanguage(content, lang, default_language).then(() => {
 				console.log("Write " + lang + " ok");
 			});
+		})
+		.catch(e => {
+			console.log(e);
 		})
 	});
 });

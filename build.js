@@ -114,12 +114,12 @@ function createZip(output, fileList) {
 				}
 				archive.file(
 					f.path,
-					new Buffer(rs.code)
+					Buffer.from(rs.code)
 				);
 			} else if (!f.fullpath.includes('.min.css') && getFileExt(f.fullpath) === 'css') {
 				archive.file(
 					f.path,
-					new Buffer(
+					Buffer.from(
 						new cleancss(CleanCSSOptions).minify(contentBuffer ? contentBuffer : fs.readFileSync(f.fullpath, 'utf-8')).styles
 					)
 				);
@@ -142,7 +142,7 @@ function createZip(output, fileList) {
 		.then(resolve);
 	});
 }
-
+	
 readDir(extDir).then((fileList) => {
 	console.log('Scanned all files');
 	createZip(BaseOutput, fileList).then(() => {
@@ -156,7 +156,7 @@ readDir(extDir).then((fileList) => {
 			manifest.version = extConfig.ext.version;
 			manifest.update_url = extConfig.ext.crx.update;
 			zip.loadAsync(fs.readFileSync(BaseOutput)).then(() => {
-				zip.file('manifest.json', new Buffer(JSON.stringify(manifest)));
+				zip.file('manifest.json', Buffer.from(JSON.stringify(manifest)));
 			})
 			.then(() => {
 				return zip.generateAsync({
@@ -182,7 +182,7 @@ readDir(extDir).then((fileList) => {
 					update_file_xml = update_file_xml.replace(/\{EXT_ID\}/g, extConfig.ext.crx.id);
 					update_file_xml = update_file_xml.replace(/\{EXT_VERSION\}/g, extConfig.ext.version);
 					update_file_xml = update_file_xml.replace(/\{EXT_URL\}/g, extConfig.ext.crx.download_url.replace(/\{VERSION\}/g, extConfig.ext.version));
-					fs.writeFileSync(update_file_path, new Buffer(update_file_xml));
+					fs.writeFileSync(update_file_path, Buffer.from(update_file_xml));
 					console.log('Updated update.xml');
 				}
 				console.log('Build chrome crx version finished');
@@ -195,7 +195,7 @@ readDir(extDir).then((fileList) => {
 			let manifest = deepCopy(ChromeManifest);
 			manifest.version = extConfig.ext.version;
 			zip.loadAsync(fs.readFileSync(BaseOutput)).then(() => {
-				zip.file('manifest.json', new Buffer(JSON.stringify(manifest)));
+				zip.file('manifest.json', Buffer.from(JSON.stringify(manifest)));
 			})
 			.then(() => {
 				return zip.generateAsync({
@@ -222,7 +222,7 @@ readDir(extDir).then((fileList) => {
 			manifest.applications.gecko.id = app_id;
 			manifest.applications.gecko.update_url = extConfig.ext.gecko.update;
 			zip.loadAsync(fs.readFileSync(BaseOutput)).then(() => {
-				zip.file('manifest.json', new Buffer(JSON.stringify(manifest)));
+				zip.file('manifest.json', Buffer.from(JSON.stringify(manifest)));
 			})
 			.then(() => {
 				return zip.generateAsync({
@@ -265,7 +265,7 @@ readDir(extDir).then((fileList) => {
 								"update_link": extConfig.ext.gecko.download_url.replace(/\{VERSION\}/g, extConfig.ext.version),
 								"update_hash": result.raw_data.files[0].hash
 							});
-							fs.writeFileSync(update_file_path, new Buffer(JSON.stringify(update_file_json)));
+							fs.writeFileSync(update_file_path, Buffer.from(JSON.stringify(update_file_json)));
 							console.log('Updated update.json');
 						}
 					}
@@ -285,7 +285,7 @@ readDir(extDir).then((fileList) => {
 			manifest.version = extConfig.ext.version;
 			manifest.applications.gecko.id = app_id;
 			zip.loadAsync(fs.readFileSync(BaseOutput)).then(() => {
-				zip.file('manifest.json', new Buffer(JSON.stringify(manifest)));
+				zip.file('manifest.json', Buffer.from(JSON.stringify(manifest)));
 			})
 			.then(() => {
 				return zip.generateAsync({
